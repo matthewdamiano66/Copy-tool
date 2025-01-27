@@ -1,10 +1,15 @@
 import os
 import time
+import subprocess
+
+
 
 
 def gui():
     return
 
+def progress_bar():
+    return
 
 def options():
     local = "local"
@@ -19,6 +24,7 @@ def options():
         exit(0)
 
 
+
 def xcopy():
     scanner = input("Please enter source path:")
     source_path = str(scanner)
@@ -30,11 +36,11 @@ def xcopy():
         exit(0)
     else:
         print("Starting Copy...")
-    command = "xcopy" + " " + source_path + " " + destination_path + " " + flags
-    print(command)
-    os.system(command)
-    w = open("history.txt", "a")
-    w.write(str(time.ctime()) + " " + command + "\n")
+        command = "xcopy" + " " + source_path + " " + destination_path + " " + flags
+        print(command)
+        os.system(command)
+        w = open("history.txt", "a")
+        w.write(str(time.ctime()) + " " + command + "\n")
 
 
 def robocopy():
@@ -55,6 +61,10 @@ def robocopy():
     w = open("history.txt", "a")
     w.write(str(time.ctime()) + " " + command + "\n")
 
+def copylogs():
+    with open('history.txt','w')as f:
+        subprocess.run(['ls', '-l'], stdout=f)
 
 if __name__ == '__main__':
     options()
+    copylogs()
