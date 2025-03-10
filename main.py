@@ -1,70 +1,83 @@
 import os
-import time
-import subprocess
+import sys
+import tkinter
+from tkinter import *
+import datetime
+
+w = tkinter.Tk()
+w.geometry("300x200")
+w.title("Copy Assistant")
+
+source_value = tkinter.StringVar()
+destination_value = tkinter.StringVar()
+output_file = "history.txt"
+current_time = str(datetime.datetime.now())
 
 
+def submit():
+    xflags = "/h/e/r/k/y/j"
+    rflags = "/E /XC /XN /XO"
+
+    header_x = "xcopy"
+    header_r = "robocopy"
+    source = source_value.get()
+    destination = destination_value.get()
+    clicked_value = clicked.get()
+
+    with open(output_file, "a") as f:  # Open in append mode
+        original_stdout = sys.stdout
+        sys.stdout = f
+
+        if clicked_value.lower() == "local":
+            print("local")
+            print(source)
+            print(destination)
+            print(current_time)
+            command = str(header_x + " " + source + " " + destination + " " + xflags)
+            os.system(command=command)
+        elif clicked_value.lower() == "network":
+            print("Network")
+            print(source)
+            print(destination)
+            command = str(header_r + " " + source + " " + destination + " " + rflags)
+            os.system(command)
+        else:
+            print("Invalid selection.")
+
+        sys.stdout = original_stdout  # Restore standard output
 
 
-def gui():
-    return
+clicked = StringVar()
+clicked.set("local")
+drop = OptionMenu(w, clicked, "Local", "Network")
+source_label = tkinter.Label(w, text='Source:')
+source_entry = tkinter.Entry(w, textvariable=source_value, font=('calibre', 10, 'normal'))
+destination_label = tkinter.Label(w, text='Destination:', font=('calibre', 10, 'bold'))
+destination_entry = tkinter.Entry(w, textvariable=destination_value, font=('calibre', 10, 'normal'))
 
-def progress_bar():
-    return
-
-def options():
-    local = "local"
-    network = "network"
-    reply = input("Will this copy be local or via network connection?")
-    if reply == local:
-        xcopy()
-    elif reply == network:
-        robocopy()
-    else:
-        print("Please check the available options and try again!")
-        exit(0)
+sub_btn = tkinter.Button(w, text='Submit', command=submit)
+source_label.grid(row=0, column=0)
+source_entry.grid(row=0, column=1)
+destination_label.grid(row=1, column=0)
+destination_entry.grid(row=1, column=1)
+drop.grid(row=2, column=1)
+sub_btn.grid(row=3, column=1)
 
 
-
-def xcopy():
-    scanner = input("Please enter source path:")
-    source_path = str(scanner)
-    scanner = input("Please enter a destination path:")
-    destination_path = str(scanner)
-    flags = "/h/e/r/k/y/j"
-    if source_path.lower() == destination_path.lower():
-        print("Please check entered values and try again!")
-        exit(0)
-    else:
-        print("Starting Copy...")
-        command = "xcopy" + " " + source_path + " " + destination_path + " " + flags
-        print(command)
-        os.system(command)
-        w = open("history.txt", "a")
-        w.write(str(time.ctime()) + " " + command + "\n")
+def history():
+    try:
+        with open(output_file, "r") as f:
+            content = f.read()
+            history_window = Toplevel(w)
+            history_window.title("Copy Log")
+            text_area = Text(history_window)
+            text_area.insert(END, content)
+            text_area.pack()
+    except FileNotFoundError:
+        print(f"Error: {output_file} not found."+" "+str(datetime.time()))
 
 
-def robocopy():
-    start = "Robocopy"
-    flags = "/E /XC /XN /XO"
-    user = str(input("Please enter the source path:")).lower()
-    source_path = user.lower()
-    user = str(input("Please enter the destination path:")).lower()
-    destination_path = user
-    if source_path.lower() == destination_path.lower():
-        print("Please check entered values and try again")
-        exit(0)
-    else:
-        print("Starting Copy...")
-    command = start + " " + source_path + " " + destination_path + " " + flags
-    os.system(command)
-    print(command)
-    w = open("history.txt", "a")
-    w.write(str(time.ctime()) + " " + command + "\n")
+history_button = tkinter.Button(w, text="Copy Logs", command=history)
+history_button.grid(row=4, column=1)
 
-def copylogs():
-    with open('history.txt','w')as f:
-        subprocess.run(['ls', '-l'], stdout=f)
-
-if __name__ == '__main__':
-    options()
-    copylogs()
+w.mainloop()
