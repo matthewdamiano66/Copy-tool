@@ -1,10 +1,23 @@
-import os
 import sys
 import tkinter
 from tkinter import *
 from tkinter import filedialog
 import datetime
 from tkinter import messagebox
+import subprocess
+import threading
+import tkinter.ttk
+import os
+import ctypes
+
+def is_admin():
+    try:
+        return ctypes.windll.shell.IsUserAnAdmin()
+    except:
+        return False
+
+if not is_admin():
+    messagebox.showinfo("Administrator Rights Recommended", "This program works best when run as administrator. Some functions may be limited. Click OK to continue anyway.")
 
 w = tkinter.Tk()
 w.geometry("400x250")
@@ -16,7 +29,6 @@ w.configure(bg="#f0f0f0")
 source_value = tkinter.StringVar()
 destination_value = tkinter.StringVar()
 output_file = "history.txt"
-current_time = str(datetime.datetime.now())
 
 def submit():
     xflags = "/h/e/r/k/y/j"
@@ -36,27 +48,62 @@ def submit():
         messagebox.showerror("Error", "Source and Destination paths must be different.")
         return
 
-    with open(output_file, "a") as f:
-        original_stdout = sys.stdout
-        sys.stdout = f
+    popup = Toplevel(w)
+    popup.title("Copying...")
+    popup.geometry("200x100")
+    Label(popup, text="Copying files...").pack(pady=20)
+    progress_bar = tkinter.ttk.Progressbar(popup, mode='indeterminate')
+    progress_bar.pack(pady=10)
+    progress_bar.start()
 
-        if clicked_value.lower() == "local":
-            print("local")
-            print(source)
-            print(destination)
-            print(current_time)
-            command = str(header_x + " " + source + " " + destination + " " + xflags)
-            os.system(command=command)
-        elif clicked_value.lower() == "network":
-            print("Network")
-            print(source)
-            print(destination)
-            command = str(header_r + " " + source + " " + destination + " " + rflags)
-            os.system(command)
-        else:
-            print("Invalid selection.")
+    def copy_thread():
+        current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        if not os.path.exists(output_file):
+            create_file = messagebox.askyesno("Create File?", f"{output_file} does not exist. Would you like to create it?")
+            if create_file:
+                open(output_file, 'a').close()
+            else:
+                popup.destroy()
+                return
 
-        sys.stdout = original_stdout
+        with open(output_file, "a") as f:
+            f.write(f"Copy started at: {current_time}\n")
+            original_stdout = sys.stdout
+            sys.stdout = f
+
+            if clicked_value.lower() == "local":
+                print("local")
+                print(source)
+                print(destination)
+                quoted_source = f'"{source}"'
+                quoted_destination = f'"{destination}"'
+                command = str(header_x + " " + quoted_source + " " + quoted_destination + " " + xflags)
+                try:
+                    result = subprocess.run(command, shell=True, capture_output=True, text=True)
+                    print(result.stdout)
+                    print(result.stderr)
+                except Exception as e:
+                    print(f"Error executing command: {e}")
+            elif clicked_value.lower() == "network":
+                print("Network")
+                print(source)
+                print(destination)
+                command = str(header_r + " " + source + " " + destination + " " + rflags)
+                try:
+                    result = subprocess.run(command, shell=True, capture_output=True, text=True)
+                    print(result.stdout)
+                    print(result.stderr)
+                except Exception as e:
+                    print(f"Error executing command: {e}")
+            else:
+                print("Invalid selection.")
+
+            sys.stdout = original_stdout
+        popup.destroy()
+
+        messagebox.showinfo("Copy Complete", "Copy completed.")
+
+    threading.Thread(target=copy_thread).start()
 
 clicked = StringVar()
 clicked.set("Local")
@@ -78,15 +125,23 @@ drop.grid(row=2, column=1, padx=10, pady=5, sticky="ew")
 sub_btn.grid(row=3, column=1, padx=10, pady=10, sticky="ew")
 
 def history():
+    if not os.path.exists(output_file):
+        create_file = messagebox.askyesno("Create File?", f"{output_file} does not exist. Would you like to create it?")
+        if create_file:
+            open(output_file, 'a').close()
+        else:
+            return
+
     try:
         with open(output_file, "r") as f:
             content = f.read()
             history_window = Toplevel(w)
             history_window.title("Copy Log")
-            history_window.geometry("500x400")
             text_area = Text(history_window, wrap=WORD, bg="white", font=('Courier New', 10))
             text_area.insert(END, content)
             text_area.pack(expand=True, fill=BOTH, padx=10, pady=10)
+            text_area.update_idletasks()
+            history_window.geometry(f"{text_area.winfo_width()+20}x{text_area.winfo_height()+20}")
     except FileNotFoundError:
         error_window = Toplevel(w)
         error_window.title("Error")
@@ -111,5 +166,11 @@ destination_browse_button = tkinter.Button(w, text="Browse", command=browse_dest
 destination_browse_button.grid(row=1, column=2, padx=5, pady=5)
 
 w.grid_columnconfigure(1, weight=1)
+
+def on_closing():
+    if messagebox.askokcancel("Quit", "Are you sure you want to quit?"):
+        w.destroy()
+
+w.protocol("WM_DELETE_WINDOW", on_closing)
 
 w.mainloop()
