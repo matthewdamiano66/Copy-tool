@@ -3,6 +3,7 @@ import tkinter
 from tkinter import *
 from tkinter import filedialog
 import datetime
+import time
 from tkinter import messagebox
 import subprocess
 import threading
@@ -50,11 +51,15 @@ def submit():
 
     popup = Toplevel(w)
     popup.title("Copying...")
-    popup.geometry("200x100")
-    Label(popup, text="Copying files...").pack(pady=20)
+    popup.geometry("300x120")
+    Label(popup, text="Copying files...").pack(pady=5)
     progress_bar = tkinter.ttk.Progressbar(popup, mode='indeterminate')
-    progress_bar.pack(pady=10)
+    progress_bar.pack(pady=5)
     progress_bar.start()
+    time_label = Label(popup, text="Estimated time remaining: Calculating...", bg=popup.cget('bg'))
+    time_label.pack(pady=5)
+
+    start_time = time.time()
 
     def copy_thread():
         current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -101,7 +106,9 @@ def submit():
             sys.stdout = original_stdout
         popup.destroy()
 
-        messagebox.showinfo("Copy Complete", "Copy completed.")
+        end_time = time.time()
+        elapsed_time = end_time - start_time
+        messagebox.showinfo("Copy Complete", f"Copy completed in {elapsed_time:.2f} seconds.")
 
     threading.Thread(target=copy_thread).start()
 
@@ -141,7 +148,7 @@ def history():
             text_area.insert(END, content)
             text_area.pack(expand=True, fill=BOTH, padx=10, pady=10)
             text_area.update_idletasks()
-            history_window.geometry(f"{text_area.winfo_width()+20}x{text_area.winfo_height()+20}")
+            history_window.geometry(f"{text_area.winfo_reqwidth()+20}x{text_area.winfo_reqheight()+20}")
     except FileNotFoundError:
         error_window = Toplevel(w)
         error_window.title("Error")
