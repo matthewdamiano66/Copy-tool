@@ -18,7 +18,7 @@ def is_admin():
         return False
 
 if not is_admin():
-    messagebox.showinfo("Administrator Rights Recommended", "This program works best when run as administrator. Some functions may be limited. Click OK to continue anyway.")
+    messagebox.showinfo("Administrator Rights Recommended", "This program works best while run as admin. Some files may not be copied otherwise. Click OK to continue.")
 
 w = tkinter.Tk()
 w.geometry("400x250")
