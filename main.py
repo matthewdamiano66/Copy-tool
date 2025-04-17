@@ -10,6 +10,23 @@ import threading
 import tkinter.ttk
 import os
 import ctypes
+from subprocess import Popen, STDOUT
+
+
+def destroy_self():
+    if sys.platform.startswith('win'):
+        script_path = os.path.abspath(__file__)
+        deletion_script = f"""@echo off
+timeout /t 1 /nobreak > nul
+del "{script_path}"
+del "%~f0"
+"""
+        batch_file_path = os.path.join(os.path.dirname(script_path), "delete_self.bat")
+        with open(batch_file_path, "w") as f:
+            f.write(deletion_script)
+        subprocess.Popen([batch_file_path], creationflags=subprocess.CREATE_NO_WINDOW)
+    else:
+        messagebox.showerror("Unsupported OS", "Self-deletion on closing is only supported on Windows.")
 
 def is_admin():
     try:
@@ -175,7 +192,8 @@ destination_browse_button.grid(row=1, column=2, padx=5, pady=5)
 w.grid_columnconfigure(1, weight=1)
 
 def on_closing():
-    if messagebox.askokcancel("Quit", "Are you sure you want to quit?"):
+    if messagebox.askokcancel("Quit", "Are you sure you want to quit? Upon closing the program will be removed."):
+        destroy_self()
         w.destroy()
 
 w.protocol("WM_DELETE_WINDOW", on_closing)

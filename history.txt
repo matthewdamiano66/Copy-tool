@@ -1,0 +1,10 @@
+local
+h:\data
+y:\data
+local
+c:\heyex
+D:\heyex
+local
+r
+r
+2025-03-10 11:49:24.513282
